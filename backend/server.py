@@ -16,7 +16,6 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.units import inch
-from emergentintegrations.llm.chat import LlmChat, UserMessage
 import uuid
 
 from models import (
