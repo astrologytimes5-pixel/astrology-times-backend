@@ -11,4 +11,4 @@ reportlab
 passlib[bcrypt]
 python-jose
 email-validator
-emergentintegrations
+
