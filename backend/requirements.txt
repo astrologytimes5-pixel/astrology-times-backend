@@ -8,8 +8,8 @@ pydantic
 requests
 razorpay
 reportlab
-passlib[bcrypt]
 python-jose
 email-validator
-PyJWT
-python-multipart
+PyJWT==2.8.0
+python-multipart==0.0.6
+passlib[bcrypt]==1.7.4
