@@ -2,7 +2,7 @@ from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
-import jwt
+import PyJWT==2.8.0
 import os
 import requests
 from motor.motor_asyncio import AsyncIOMotorClient
