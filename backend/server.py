@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 import os
 import logging
 from pathlib import Path
