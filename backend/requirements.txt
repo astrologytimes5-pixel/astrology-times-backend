@@ -8,7 +8,6 @@ pydantic
 requests
 razorpay
 reportlab
-python-jose
 email-validator
 PyJWT==2.8.0
 python-multipart==0.0.6
