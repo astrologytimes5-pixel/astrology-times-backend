@@ -5,7 +5,6 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from emergentintegrations.llm.chat import LlmChat, UserMessage
 import os
 import logging
 from pathlib import Path
@@ -17,6 +16,8 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.units import inch
+# LLM helper — direct HTTPS calls, no `emergentintegrations` dependency (works on any hosting platform).
+from llm_helper import llm_chat
 import uuid
 
 from models import (
@@ -857,11 +858,7 @@ async def generate_ai_report(booking_id: str, booking_type: str, request: Reques
     
     user_data = await db.users.find_one({"user_id": booking["user_id"]}, {"_id": 0})
     
-    chat = LlmChat(
-        api_key=os.environ.get("EMERGENT_LLM_KEY"),
-        session_id=f"report_{booking_id}",
-        system_message="You are an astrology and vastu expert creating session summary reports."
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    chat_system = "You are an astrology and vastu expert creating session summary reports."
     
     prompt = f"""Generate a professional session summary report for:
 Client Name: {user_data.get('name')}
@@ -877,8 +874,7 @@ Include:
 
 Keep it professional and concise."""
     
-    message = UserMessage(text=prompt)
-    report_content = await chat.send_message(message)
+    report_content = await llm_chat(chat_system, prompt)
     
     report_id = f"RPT{uuid.uuid4().hex[:8].upper()}"
     import tempfile
@@ -1028,11 +1024,7 @@ async def download_file(path: str, request: Request, auth: str = Query(None)):
 async def generate_kundli(data: KundliRequest):
     # Use Claude Sonnet 4.5 — significantly faster than gpt-5.2 for long-form output.
     # Cloudflare edge proxy times out at ~60s, so we must stay under that window.
-    chat = LlmChat(
-        api_key=os.environ.get("EMERGENT_LLM_KEY"),
-        session_id=f"kundli_{uuid.uuid4().hex[:8]}",
-        system_message="You are an expert Vedic astrologer. Generate concise but insightful Kundli readings in both Hindi and English. Be accurate and professional."
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    chat_system = "You are an expert Vedic astrologer. Generate concise but insightful Kundli readings in both Hindi and English. Be accurate and professional."
     
     prompt = f"""Generate a Vedic Kundli analysis for:
 Name: {data.name} | DOB: {data.dob} | Time: {data.time_of_birth} | Place: {data.place_of_birth} | Gender: {data.gender}
@@ -1051,8 +1043,7 @@ Provide these sections concisely (3-4 lines each, both English and Hindi):
 
 Use ## for section headings. Keep total under 600 words. Be specific."""
     
-    message = UserMessage(text=prompt)
-    kundli_content = await chat.send_message(message)
+    kundli_content = await llm_chat(chat_system, prompt)
     
     return {
         "name": data.name,
@@ -1535,11 +1526,7 @@ async def admin_generate_daily_horoscope(request: Request):
     
     signs = ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
     
-    chat = LlmChat(
-        api_key=os.environ.get("EMERGENT_LLM_KEY"),
-        session_id=f"horoscope_{today}",
-        system_message="You are an expert Vedic astrologer. Generate daily horoscope predictions in both Hindi and English. Be specific and meaningful."
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    chat_system = "You are an expert Vedic astrologer. Generate daily horoscope predictions in both Hindi and English. Be specific and meaningful."
     
     prompt = f"""Generate daily horoscope for {today} for all 12 zodiac signs. 
 For each sign provide JSON format:
@@ -1555,8 +1542,7 @@ For each sign provide JSON format:
 }}
 Return a JSON array of 12 objects. Only return the JSON, no other text."""
     
-    message = UserMessage(text=prompt)
-    response_text = await chat.send_message(message)
+    response_text = await llm_chat(chat_system, prompt, timeout=90.0)
     
     try:
         import json
