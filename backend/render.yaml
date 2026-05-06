@@ -1,0 +1,35 @@
+# Astrology Times — Render Blueprint
+# Drop this file into your Render dashboard via "New → Blueprint" pointing at your repo.
+# It will auto-create a web service for the FastAPI backend.
+
+services:
+  - type: web
+    name: astrology-times-api
+    runtime: python
+    plan: starter            # change to "free" for free tier (sleeps after 15 min idle)
+    region: singapore        # change to "oregon" / "frankfurt" if your users are elsewhere
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /api/
+    autoDeploy: true
+    envVars:
+      - key: MONGO_URL
+        sync: false          # set in Render dashboard (your MongoDB Atlas SRV URL)
+      - key: DB_NAME
+        value: astrology_times
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMERGENT_LLM_KEY
+        sync: false          # set in Render dashboard (your Universal LLM key)
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@astrologytimes.co.in
+      - key: ADMIN_PASSWORD
+        sync: false          # set this manually — DO NOT commit
+      - key: CORS_ORIGINS
+        value: "*"           # tighten to your frontend domain in production
+      - key: PYTHON_VERSION
+        value: 3.11.9
