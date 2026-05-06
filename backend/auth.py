@@ -2,7 +2,7 @@ from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
-import PyJWT==2.8.0
+import jwt
 import os
 import requests
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -13,16 +13,11 @@ security = HTTPBearer(auto_error=False)
 JWT_SECRET = os.environ.get("JWT_SECRET", "astrology_times_secret_key_2026")
 JWT_ALGORITHM = "HS256"
 
-import hashlib
-
-def safe_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
-
 def hash_password(password: str) -> str:
-    return pwd_context.hash(safe_password(password))
+    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(safe_password(plain_password), hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)
 
 def create_jwt_token(user_id: str, email: str) -> str:
     payload = {
